@@ -55,4 +55,14 @@ mod test {
 
         assert_eq!(vm.stack[0], Type::Float(3.0));
     }
+
+    #[test]
+    fn test_add_str() {
+        let mut vm = FifVM::new();
+        vm.push(Type::Str("world".to_string()));
+        vm.push(Type::Str("hello ".to_string()));
+        vm.add();
+
+        assert_eq!(vm.stack[0], Type::Str("hello world".to_string()));
+    }
 }

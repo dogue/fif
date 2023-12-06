@@ -36,6 +36,7 @@ impl Add for Type {
         match (self, rhs) {
             (Type::Int(a), Type::Int(b)) => Type::Int(a + b),
             (Type::Float(a), Type::Float(b)) => Type::Float(a + b),
+            (Type::Str(a), Type::Str(b)) => Type::Str(format!("{a}{b}")),
             _ => Type::Invalid,
         }
     }
