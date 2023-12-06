@@ -1,5 +1,6 @@
 use types::Type;
 
+mod lexer;
 mod types;
 
 #[derive(Debug)]
@@ -15,7 +16,7 @@ impl FifVM {
     pub fn run(&mut self) {}
 
     fn pop(&mut self) -> Type {
-        self.stack.pop().unwrap()
+        self.stack.pop().unwrap_or_default()
     }
 
     fn pop_two(&mut self) -> (Type, Type) {
@@ -27,9 +28,10 @@ impl FifVM {
     }
 
     fn swap(&mut self) {
-        let top = self.stack.len() - 1;
-        let next = top - 1;
-        self.stack.swap(top, next);
+        let a = self.pop();
+        let b = self.pop();
+        self.push(a);
+        self.push(b);
     }
 
     fn duplicate(&mut self) {
@@ -46,6 +48,16 @@ impl FifVM {
     fn sub(&mut self) {
         let (a, b) = self.pop_two();
         self.push(a - b);
+    }
+
+    fn mul(&mut self) {
+        let (a, b) = self.pop_two();
+        self.push(a * b);
+    }
+
+    fn div(&mut self) {
+        let (a, b) = self.pop_two();
+        self.push(a / b);
     }
 }
 
@@ -111,5 +123,72 @@ mod test {
         vm.sub();
 
         assert_eq!(vm.stack[0], Type::Invalid);
+    }
+
+    #[test]
+    fn test_mul_int() {
+        let mut vm = FifVM::new();
+        vm.push(Type::Int(2));
+        vm.push(Type::Int(3));
+        vm.mul();
+
+        assert_eq!(vm.stack[0], Type::Int(6));
+    }
+
+    #[test]
+    fn test_mul_float() {
+        let mut vm = FifVM::new();
+        vm.push(Type::Float(2.0));
+        vm.push(Type::Float(3.0));
+        vm.mul();
+
+        assert_eq!(vm.stack[0], Type::Float(6.0));
+    }
+
+    #[test]
+    fn test_div_int() {
+        let mut vm = FifVM::new();
+        vm.push(Type::Int(2));
+        vm.push(Type::Int(6));
+        vm.div();
+
+        assert_eq!(vm.stack[0], Type::Int(3));
+    }
+
+    #[test]
+    fn test_div_float() {
+        let mut vm = FifVM::new();
+        vm.push(Type::Float(2.0));
+        vm.push(Type::Float(6.0));
+        vm.div();
+
+        assert_eq!(vm.stack[0], Type::Float(3.0));
+    }
+
+    #[test]
+    fn test_swap() {
+        let mut vm = FifVM::new();
+        vm.push(Type::Int(1));
+        vm.push(Type::Int(2));
+        vm.swap();
+
+        assert_eq!(vm.stack, vec![Type::Int(2), Type::Int(1)]);
+    }
+
+    #[test]
+    fn test_swap_empty_stack() {
+        let mut vm = FifVM::new();
+        vm.swap();
+
+        assert_eq!(vm.stack, vec![Type::Nil, Type::Nil]);
+    }
+
+    #[test]
+    fn test_duplicate() {
+        let mut vm = FifVM::new();
+        vm.push(Type::Int(1));
+        vm.duplicate();
+
+        assert_eq!(vm.stack, vec![Type::Int(1), Type::Int(1)]);
     }
 }

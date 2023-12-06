@@ -1,13 +1,16 @@
 use std::{
-    ops::{Add, Sub},
+    default,
+    ops::{Add, Div, Mul, Sub},
     str::FromStr,
 };
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Default, Debug, PartialEq, Clone)]
 pub enum Type {
     Int(isize),
     Float(f32),
     Str(String),
+    #[default]
+    Nil,
     Invalid,
 }
 
@@ -52,6 +55,31 @@ impl Sub for Type {
         match (self, rhs) {
             (Type::Int(a), Type::Int(b)) => Type::Int(a - b),
             (Type::Float(a), Type::Float(b)) => Type::Float(a - b),
+            _ => Type::Invalid,
+        }
+    }
+}
+
+impl Mul for Type {
+    type Output = Type;
+
+    fn mul(self, rhs: Self) -> Self::Output {
+        match (self, rhs) {
+            (Type::Int(a), Type::Int(b)) => Type::Int(a * b),
+            (Type::Float(a), Type::Float(b)) => Type::Float(a * b),
+            (Type::Str(s), Type::Int(r)) => Type::Str(s.repeat(r as usize)),
+            _ => Type::Invalid,
+        }
+    }
+}
+
+impl Div for Type {
+    type Output = Type;
+
+    fn div(self, rhs: Self) -> Self::Output {
+        match (self, rhs) {
+            (Type::Int(a), Type::Int(b)) => Type::Int(a / b),
+            (Type::Float(a), Type::Float(b)) => Type::Float(a / b),
             _ => Type::Invalid,
         }
     }
