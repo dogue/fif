@@ -1,6 +1,9 @@
-use std::{ops::Add, str::FromStr};
+use std::{
+    ops::{Add, Sub},
+    str::FromStr,
+};
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum Type {
     Int(isize),
     Float(f32),
@@ -37,6 +40,18 @@ impl Add for Type {
             (Type::Int(a), Type::Int(b)) => Type::Int(a + b),
             (Type::Float(a), Type::Float(b)) => Type::Float(a + b),
             (Type::Str(a), Type::Str(b)) => Type::Str(format!("{a}{b}")),
+            _ => Type::Invalid,
+        }
+    }
+}
+
+impl Sub for Type {
+    type Output = Type;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        match (self, rhs) {
+            (Type::Int(a), Type::Int(b)) => Type::Int(a - b),
+            (Type::Float(a), Type::Float(b)) => Type::Float(a - b),
             _ => Type::Invalid,
         }
     }
