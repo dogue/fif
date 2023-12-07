@@ -1,7 +1,7 @@
 use types::Type;
 
-mod lexer;
-mod types;
+pub mod lexer;
+pub mod types;
 
 #[derive(Debug)]
 pub struct FifVM {
