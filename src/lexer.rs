@@ -50,7 +50,14 @@ impl Lexer {
             b'+' => Token::Operator(Operator::Add),
             b'-' => Token::Operator(Operator::Sub),
             b'*' => Token::Operator(Operator::Mul),
-            b'/' => Token::Operator(Operator::Div),
+            b'/' => {
+                if self.peek() == b'/' {
+                    let comment = self.read_comment();
+                    Token::Comment(comment)
+                } else {
+                    Token::Operator(Operator::Div)
+                }
+            }
             0 => Token::Eof,
             _ => Token::Invalid,
         };
@@ -99,7 +106,16 @@ impl Lexer {
         String::from_utf8_lossy(&self.input[start..self.cursor]).to_string()
     }
 
-    fn _peek(&self) -> u8 {
+    fn read_comment(&mut self) -> String {
+        let start = self.cursor;
+        while self.ch != b'\n' {
+            self.read();
+        }
+
+        String::from_utf8_lossy(&self.input[start..self.cursor]).to_string()
+    }
+
+    fn peek(&self) -> u8 {
         if self.peek >= self.input.len() {
             0
         } else {

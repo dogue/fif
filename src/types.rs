@@ -8,9 +8,9 @@ pub enum Type {
     Int(isize),
     Float(f32),
     Str(String),
+    Invalid,
     #[default]
     Nil,
-    Invalid,
 }
 
 #[derive(Debug, PartialEq, Eq)]
