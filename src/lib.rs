@@ -1,3 +1,4 @@
+use lexer::{Lexer, Operator, Token};
 use types::Type;
 
 pub mod lexer;
@@ -13,7 +14,34 @@ impl FifVM {
         Self { stack: Vec::new() }
     }
 
-    pub fn run(&mut self) {}
+    pub fn run(&mut self, input: &str) {
+        let mut lexer = Lexer::new(input);
+
+        loop {
+            match lexer.next_token() {
+                Token::Number(n) => {
+                    let num = Lexer::parse_number(&n);
+                    self.push(num);
+                }
+                Token::Str(s) => {
+                    let str = Type::Str(s);
+                    self.push(str);
+                }
+                Token::Operator(o) => match o {
+                    Operator::Add => self.add(),
+                    Operator::Sub => self.sub(),
+                    Operator::Mul => self.mul(),
+                    Operator::Div => self.div(),
+                    Operator::Swap => self.swap(),
+                    Operator::Dupe => self.dupe(),
+                },
+                Token::Eof => break,
+                Token::Ident(_) => {}
+                Token::Comment(_) => {}
+                Token::Invalid => {}
+            }
+        }
+    }
 
     fn pop(&mut self) -> Type {
         self.stack.pop().unwrap_or_default()
@@ -34,7 +62,7 @@ impl FifVM {
         self.push(b);
     }
 
-    fn duplicate(&mut self) {
+    fn dupe(&mut self) {
         if let Some(top) = self.stack.last().cloned() {
             self.stack.push(top);
         }
@@ -187,7 +215,7 @@ mod test {
     fn test_duplicate() {
         let mut vm = FifVM::new();
         vm.push(Type::Int(1));
-        vm.duplicate();
+        vm.dupe();
 
         assert_eq!(vm.stack, vec![Type::Int(1), Type::Int(1)]);
     }

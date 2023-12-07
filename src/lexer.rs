@@ -1,11 +1,13 @@
+use crate::types::Type;
+
 #[derive(Debug)]
 pub struct Lexer {
     input: Vec<u8>,
     cursor: usize,
     peek: usize,
     ch: u8,
-    line: usize,
-    column: usize,
+    // line: usize,
+    // column: usize,
 }
 
 impl Lexer {
@@ -15,8 +17,8 @@ impl Lexer {
             cursor: 0,
             peek: 0,
             ch: 0,
-            line: 1,
-            column: 1,
+            // line: 1,
+            // column: 1,
         };
 
         lexer.read();
@@ -30,17 +32,25 @@ impl Lexer {
         let token = match self.ch {
             b'a'..=b'z' | b'A'..=b'Z' | b'_' => {
                 let ident = self.read_ident();
-                return Token::Ident(ident);
+                match ident.as_str() {
+                    "swap" => return Token::Operator(Operator::Swap),
+                    "dupe" => return Token::Operator(Operator::Dupe),
+                    _ => return Token::Ident(ident),
+                }
             }
             b'0'..=b'9' => {
                 let num = self.read_number();
-                return Self::parse_number(&num);
+                return Token::Number(num);
             }
             b'"' => {
                 self.read(); // consume first double quote
                 let str = self.read_str();
                 Token::Str(str)
             }
+            b'+' => Token::Operator(Operator::Add),
+            b'-' => Token::Operator(Operator::Sub),
+            b'*' => Token::Operator(Operator::Mul),
+            b'/' => Token::Operator(Operator::Div),
             0 => Token::Eof,
             _ => Token::Invalid,
         };
@@ -59,16 +69,6 @@ impl Lexer {
 
         self.cursor = self.peek;
         self.peek += 1;
-    }
-
-    fn parse_number(s: &str) -> Token {
-        if s.contains('.') {
-            let num = s.parse::<f32>().unwrap_or_default();
-            Token::Float(num)
-        } else {
-            let num = s.parse::<isize>().unwrap_or_default();
-            Token::Int(num)
-        }
     }
 
     fn read_ident(&mut self) -> String {
@@ -99,7 +99,7 @@ impl Lexer {
         String::from_utf8_lossy(&self.input[start..self.cursor]).to_string()
     }
 
-    fn peek(&self) -> u8 {
+    fn _peek(&self) -> u8 {
         if self.peek >= self.input.len() {
             0
         } else {
@@ -112,16 +112,35 @@ impl Lexer {
             self.read();
         }
     }
+
+    pub fn parse_number(s: &str) -> Type {
+        if s.contains('.') {
+            let num = s.parse::<f32>().unwrap_or_default();
+            Type::Float(num)
+        } else {
+            let num = s.parse::<isize>().unwrap_or_default();
+            Type::Int(num)
+        }
+    }
 }
 
 #[derive(Debug, PartialEq)]
 pub enum Token {
-    Int(isize),
-    Float(f32),
+    Number(String),
     Str(String),
     Ident(String),
-    Operator(String),
+    Operator(Operator),
     Comment(String),
     Invalid,
     Eof,
+}
+
+#[derive(Debug, PartialEq)]
+pub enum Operator {
+    Add,
+    Sub,
+    Mul,
+    Div,
+    Swap,
+    Dupe,
 }

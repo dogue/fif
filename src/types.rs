@@ -1,5 +1,4 @@
 use std::{
-    default,
     ops::{Add, Div, Mul, Sub},
     str::FromStr,
 };
