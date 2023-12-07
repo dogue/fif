@@ -40,6 +40,8 @@ impl Add for Type {
     fn add(self, rhs: Self) -> Self::Output {
         match (self, rhs) {
             (Type::Int(a), Type::Int(b)) => Type::Int(a + b),
+            (Type::Int(a), Type::Float(b)) => Type::Float(a as f32 + b),
+            (Type::Float(a), Type::Int(b)) => Type::Float(a + (b as f32)),
             (Type::Float(a), Type::Float(b)) => Type::Float(a + b),
             (Type::Str(a), Type::Str(b)) => Type::Str(format!("{a}{b}")),
             _ => Type::Invalid,
@@ -53,6 +55,8 @@ impl Sub for Type {
     fn sub(self, rhs: Self) -> Self::Output {
         match (self, rhs) {
             (Type::Int(a), Type::Int(b)) => Type::Int(a - b),
+            (Type::Int(a), Type::Float(b)) => Type::Float(a as f32 - b),
+            (Type::Float(a), Type::Int(b)) => Type::Float(a - (b as f32)),
             (Type::Float(a), Type::Float(b)) => Type::Float(a - b),
             _ => Type::Invalid,
         }
@@ -65,6 +69,8 @@ impl Mul for Type {
     fn mul(self, rhs: Self) -> Self::Output {
         match (self, rhs) {
             (Type::Int(a), Type::Int(b)) => Type::Int(a * b),
+            (Type::Int(a), Type::Float(b)) => Type::Float(a as f32 * b),
+            (Type::Float(a), Type::Int(b)) => Type::Float(a * (b as f32)),
             (Type::Float(a), Type::Float(b)) => Type::Float(a * b),
             (Type::Str(s), Type::Int(r)) => Type::Str(s.repeat(r as usize)),
             _ => Type::Invalid,
@@ -78,6 +84,8 @@ impl Div for Type {
     fn div(self, rhs: Self) -> Self::Output {
         match (self, rhs) {
             (Type::Int(a), Type::Int(b)) => Type::Int(a / b),
+            (Type::Int(a), Type::Float(b)) => Type::Float(a as f32 / b),
+            (Type::Float(a), Type::Int(b)) => Type::Float(a / (b as f32)),
             (Type::Float(a), Type::Float(b)) => Type::Float(a / b),
             _ => Type::Invalid,
         }
