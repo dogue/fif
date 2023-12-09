@@ -27,20 +27,19 @@ impl FifVM {
             TokenType::String => {
                 let str = Type::Str(token.literal.clone());
                 self.push(str);
+                println!("pushed str");
             }
             TokenType::Add => self.add(),
             TokenType::Sub => self.sub(),
             TokenType::Mul => self.mul(),
             TokenType::Div => self.div(),
-            TokenType::Eof => {}
+            TokenType::Swap => self.swap(),
+            TokenType::Dupe => self.dupe(),
+            TokenType::Var => {}
+            TokenType::Eof => return,
             TokenType::Ident => {}
             TokenType::Comment => {}
             TokenType::Invalid => {}
-            TokenType::Keyword => match token.literal.as_str() {
-                "swap" => self.swap(),
-                "dupe" => self.dupe(),
-                _ => {}
-            },
         });
     }
 

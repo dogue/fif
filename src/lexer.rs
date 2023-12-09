@@ -46,8 +46,9 @@ impl Lexer {
             b'a'..=b'z' | b'A'..=b'Z' | b'_' => {
                 let ident = self.read_ident()?;
                 match ident.as_str() {
-                    "swap" => return Ok(Token::new(&ident, TokenType::Keyword)),
-                    "dupe" => return Ok(Token::new(&ident, TokenType::Keyword)),
+                    "swap" => return Ok(Token::new(&ident, TokenType::Swap)),
+                    "dupe" => return Ok(Token::new(&ident, TokenType::Dupe)),
+                    "var" => return Ok(Token::new(&ident, TokenType::Var)),
                     _ => return Ok(Token::new(&ident, TokenType::Ident)),
                 }
             }
@@ -58,7 +59,8 @@ impl Lexer {
             b'"' => {
                 self.read(); // consume first double quote
                 let string = self.read_str()?;
-                return Ok(Token::new(&string, TokenType::String));
+                println!("read str: {string}");
+                Token::new(&string, TokenType::String)
             }
             b'+' => Token::new("+", TokenType::Add),
             b'-' => Token::new("-", TokenType::Sub),
@@ -176,7 +178,9 @@ pub enum TokenType {
     Number,
     String,
     Ident,
-    Keyword,
+    Swap,
+    Dupe,
+    Var,
     Add,
     Sub,
     Mul,
