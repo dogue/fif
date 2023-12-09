@@ -1,6 +1,8 @@
 use crate::error::LexerError;
 use crate::types::Type;
 
+use super::{Token, TokenType};
+
 #[derive(Debug)]
 pub struct Lexer {
     input: Vec<char>,
@@ -42,39 +44,43 @@ impl Lexer {
     pub fn next_token(&mut self) -> Result<Token, LexerError> {
         self.skip_whitespace();
 
+        let line = self.line;
+        let column = self.column;
+
         let token = match self.ch {
             'a'..='z' | 'A'..='Z' | '_' => {
                 let ident = self.read_ident();
                 match ident.as_str() {
-                    "swap" => return Ok(Token::new(&ident, TokenType::Swap)),
-                    "dupe" => return Ok(Token::new(&ident, TokenType::Dupe)),
-                    "print" => return Ok(Token::new(&ident, TokenType::Print)),
-                    "var" => return Ok(Token::new(&ident, TokenType::Var)),
-                    _ => return Ok(Token::new(&ident, TokenType::Ident)),
+                    "swap" => return Ok(Token::new(&ident, TokenType::Swap, line, column)),
+                    "dupe" => return Ok(Token::new(&ident, TokenType::Dupe, line, column)),
+                    "print" => return Ok(Token::new(&ident, TokenType::Print, line, column)),
+                    "debug" => return Ok(Token::new(&ident, TokenType::Debug, line, column)),
+                    "var" => return Ok(Token::new(&ident, TokenType::Var, line, column)),
+                    _ => return Ok(Token::new(&ident, TokenType::Ident, line, column)),
                 }
             }
             '0'..='9' => {
                 let num = self.read_number()?;
-                return Ok(Token::new(&num, TokenType::Number));
+                return Ok(Token::new(&num, TokenType::Number, line, column));
             }
             '"' => {
                 self.read(); // consume first double quote
                 let string = self.read_str();
-                Token::new(&string, TokenType::String)
+                Token::new(&string, TokenType::String, line, column)
             }
-            '+' => Token::new("+", TokenType::Add),
-            '-' => Token::new("-", TokenType::Sub),
-            '*' => Token::new("*", TokenType::Mul),
+            '+' => Token::new("+", TokenType::Add, line, column),
+            '-' => Token::new("-", TokenType::Sub, line, column),
+            '*' => Token::new("*", TokenType::Mul, line, column),
             '/' => {
                 if self.peek() == '/' {
                     let comment = self.read_comment();
-                    Token::new(&comment, TokenType::Comment)
+                    Token::new(&comment, TokenType::Comment, line, column)
                 } else {
-                    Token::new("/", TokenType::Div)
+                    Token::new("/", TokenType::Div, line, column)
                 }
             }
-            '\0' => Token::new("\0", TokenType::Eof),
-            _ => Token::new(&self.ch.to_string(), TokenType::Invalid),
+            '\0' => Token::new("\0", TokenType::Eof, line, column),
+            _ => Token::new(&self.ch.to_string(), TokenType::Invalid, line, column),
         };
 
         self.read();
@@ -102,8 +108,6 @@ impl Lexer {
 
     fn read_ident(&mut self) -> String {
         let start = self.cursor;
-        let line = self.line;
-        let column = self.column;
         while self.ch.is_alphabetic() || self.ch == '_' {
             self.read();
         }
@@ -133,8 +137,6 @@ impl Lexer {
 
     fn read_str(&mut self) -> String {
         let start = self.cursor;
-        let line = self.line;
-        let column = self.column;
         while self.ch != '"' {
             self.read();
         }
@@ -145,8 +147,6 @@ impl Lexer {
 
     fn read_comment(&mut self) -> String {
         let start = self.cursor;
-        let line = self.line;
-        let column = self.column;
         while self.ch != '\n' {
             self.read();
         }
@@ -172,37 +172,4 @@ impl Lexer {
     pub fn parse_number(s: &str) -> Type {
         s.parse().unwrap()
     }
-}
-
-#[derive(Debug, PartialEq, Clone)]
-pub struct Token {
-    pub literal: String,
-    pub token_type: TokenType,
-}
-
-impl Token {
-    pub fn new(literal: &str, token_type: TokenType) -> Self {
-        Self {
-            literal: literal.to_string(),
-            token_type,
-        }
-    }
-}
-
-#[derive(Debug, PartialEq, Clone)]
-pub enum TokenType {
-    Number,
-    String,
-    Ident,
-    Swap,
-    Dupe,
-    Print,
-    Var,
-    Add,
-    Sub,
-    Mul,
-    Div,
-    Comment,
-    Invalid,
-    Eof,
 }

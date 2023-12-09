@@ -35,6 +35,7 @@ impl FifVM {
             TokenType::Swap => self.swap(),
             TokenType::Dupe => self.dupe(),
             TokenType::Print => self.print(),
+            TokenType::Debug => println!("{tokens:#?}"),
             TokenType::Var => {}
             TokenType::Eof => return,
             TokenType::Ident => {}
