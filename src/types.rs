@@ -9,10 +9,6 @@ pub enum Type {
     Int(isize),
     Float(f32),
     Str(String),
-    Operator,
-    Keyword,
-    Ident,
-    Invalid,
     #[default]
     Nil,
 }
@@ -57,7 +53,7 @@ impl Add for Type {
             (Type::Float(a), Type::Int(b)) => Type::Float(a + (b as f32)),
             (Type::Float(a), Type::Float(b)) => Type::Float(a + b),
             (Type::Str(a), Type::Str(b)) => Type::Str(format!("{a}{b}")),
-            _ => Type::Invalid,
+            _ => Type::Nil,
         }
     }
 }
@@ -71,7 +67,7 @@ impl Sub for Type {
             (Type::Int(a), Type::Float(b)) => Type::Float(a as f32 - b),
             (Type::Float(a), Type::Int(b)) => Type::Float(a - (b as f32)),
             (Type::Float(a), Type::Float(b)) => Type::Float(a - b),
-            _ => Type::Invalid,
+            _ => Type::Nil,
         }
     }
 }
@@ -86,7 +82,7 @@ impl Mul for Type {
             (Type::Float(a), Type::Int(b)) => Type::Float(a * (b as f32)),
             (Type::Float(a), Type::Float(b)) => Type::Float(a * b),
             (Type::Str(s), Type::Int(r)) => Type::Str(s.repeat(r as usize)),
-            _ => Type::Invalid,
+            _ => Type::Nil,
         }
     }
 }
@@ -100,7 +96,7 @@ impl Div for Type {
             (Type::Int(a), Type::Float(b)) => Type::Float(a as f32 / b),
             (Type::Float(a), Type::Int(b)) => Type::Float(a / (b as f32)),
             (Type::Float(a), Type::Float(b)) => Type::Float(a / b),
-            _ => Type::Invalid,
+            _ => Type::Nil,
         }
     }
 }

@@ -27,7 +27,6 @@ impl FifVM {
             TokenType::String => {
                 let str = Type::Str(token.literal.clone());
                 self.push(str);
-                println!("pushed str");
             }
             TokenType::Add => self.add(),
             TokenType::Sub => self.sub(),
@@ -35,6 +34,7 @@ impl FifVM {
             TokenType::Div => self.div(),
             TokenType::Swap => self.swap(),
             TokenType::Dupe => self.dupe(),
+            TokenType::Print => self.print(),
             TokenType::Var => {}
             TokenType::Eof => return,
             TokenType::Ident => {}
@@ -44,7 +44,7 @@ impl FifVM {
     }
 
     fn pop(&mut self) -> Type {
-        self.stack.pop().unwrap_or_default()
+        self.stack.pop().unwrap_or(Type::Nil)
     }
 
     fn pop_two(&mut self) -> (Type, Type) {
@@ -65,6 +65,15 @@ impl FifVM {
     fn dupe(&mut self) {
         if let Some(top) = self.stack.last().cloned() {
             self.stack.push(top);
+        }
+    }
+
+    fn print(&mut self) {
+        match self.pop() {
+            Type::Int(n) => println!("{n}"),
+            Type::Float(n) => println!("{n}"),
+            Type::Str(s) => println!("{s}"),
+            Type::Nil => println!("nil"),
         }
     }
 
@@ -150,7 +159,7 @@ mod test {
         vm.push(Type::Str("nuts".to_string()));
         vm.sub();
 
-        assert_eq!(vm.stack[0], Type::Invalid);
+        assert_eq!(vm.stack[0], Type::Nil);
     }
 
     #[test]

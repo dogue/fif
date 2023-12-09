@@ -11,6 +11,9 @@ fn main() {
         5.0 /             // if you mix floats and ints, the result will be a float
         "hello"           // strings get pushed as well
         " world" swap +   // you can concatenate strings with addition
+        print
+        print
+        print
         "#,
     );
     println!("{vm:?}");
