@@ -26,6 +26,7 @@ pub enum TokenType {
     Dupe,
     Print,
     Debug,
+    Drop,
     Var,
     Add,
     Sub,

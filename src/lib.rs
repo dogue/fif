@@ -48,6 +48,14 @@ impl FifVM {
                 TokenType::Dupe => self.dupe(),
                 TokenType::Print => self.print(),
                 TokenType::Debug => println!("{tokens:#?}"),
+                TokenType::Drop => {
+                    let next = &tokens[current + 1];
+                    if next.token_type == TokenType::Ident {
+                        self.vars.remove(&next.literal);
+                    } else {
+                        self.drop();
+                    }
+                }
                 TokenType::Var => {
                     let ident = &tokens[current + 1];
                     let value = &tokens[current + 2];
@@ -101,6 +109,10 @@ impl FifVM {
             Type::Str(s) => println!("{s}"),
             Type::Nil => println!("nil"),
         }
+    }
+
+    fn drop(&mut self) {
+        self.pop();
     }
 
     fn add(&mut self) {

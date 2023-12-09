@@ -1,5 +1,4 @@
 use crate::error::LexerError;
-use crate::types::Type;
 
 use super::{Token, TokenType};
 
@@ -55,6 +54,7 @@ impl Lexer {
                     "dupe" => return Ok(Token::new(&ident, TokenType::Dupe, line, column)),
                     "print" => return Ok(Token::new(&ident, TokenType::Print, line, column)),
                     "debug" => return Ok(Token::new(&ident, TokenType::Debug, line, column)),
+                    "drop" => return Ok(Token::new(&ident, TokenType::Drop, line, column)),
                     "var" => return Ok(Token::new(&ident, TokenType::Var, line, column)),
                     _ => return Ok(Token::new(&ident, TokenType::Ident, line, column)),
                 }
