@@ -1,47 +1,72 @@
+use std::collections::HashMap;
+
 use lexer::{Lexer, TokenType};
+use parser::Parser;
 use types::Type;
 
-pub mod error;
-pub mod lexer;
-pub mod types;
+mod error;
+mod lexer;
+mod parser;
+mod types;
 
 #[derive(Debug)]
 pub struct FifVM {
     pub stack: Vec<Type>,
+    pub vars: HashMap<String, Type>,
 }
 
 impl FifVM {
     pub fn new() -> Self {
-        Self { stack: Vec::new() }
+        Self {
+            stack: Vec::new(),
+            vars: HashMap::new(),
+        }
     }
 
     pub fn run(&mut self, input: &str) {
         let mut lexer = Lexer::new(input);
         let tokens = lexer.tokenize().unwrap();
+        let mut current = 0;
+        let parser = Parser::new();
 
-        tokens.iter().for_each(|token| match token.token_type {
-            TokenType::Number => {
-                let num = Lexer::parse_number(&token.literal);
-                self.push(num);
+        loop {
+            let token = &tokens[current];
+            match token.token_type {
+                TokenType::Number => {
+                    let num = token.literal.parse().unwrap_or_default();
+                    self.push(num);
+                }
+                TokenType::String => {
+                    let str = Type::Str(token.literal.clone());
+                    self.push(str);
+                }
+                TokenType::Add => self.add(),
+                TokenType::Sub => self.sub(),
+                TokenType::Mul => self.mul(),
+                TokenType::Div => self.div(),
+                TokenType::Swap => self.swap(),
+                TokenType::Dupe => self.dupe(),
+                TokenType::Print => self.print(),
+                TokenType::Debug => println!("{tokens:#?}"),
+                TokenType::Var => {
+                    let ident = &tokens[current + 1];
+                    let value = &tokens[current + 2];
+                    if let Some(t) = parser.parse_type(value) {
+                        self.vars.insert(ident.literal.clone(), t);
+                    }
+                    current += 2;
+                }
+                TokenType::Eof => return,
+                TokenType::Ident => {
+                    if self.vars.contains_key(&token.literal) {
+                        self.push(self.vars.get(&token.literal).unwrap().to_owned());
+                    }
+                }
+                TokenType::Comment => {}
+                TokenType::Invalid => {}
             }
-            TokenType::String => {
-                let str = Type::Str(token.literal.clone());
-                self.push(str);
-            }
-            TokenType::Add => self.add(),
-            TokenType::Sub => self.sub(),
-            TokenType::Mul => self.mul(),
-            TokenType::Div => self.div(),
-            TokenType::Swap => self.swap(),
-            TokenType::Dupe => self.dupe(),
-            TokenType::Print => self.print(),
-            TokenType::Debug => println!("{tokens:#?}"),
-            TokenType::Var => {}
-            TokenType::Eof => return,
-            TokenType::Ident => {}
-            TokenType::Comment => {}
-            TokenType::Invalid => {}
-        });
+            current += 1;
+        }
     }
 
     fn pop(&mut self) -> Type {

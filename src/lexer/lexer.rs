@@ -168,8 +168,4 @@ impl Lexer {
             self.read();
         }
     }
-
-    pub fn parse_number(s: &str) -> Type {
-        s.parse().unwrap()
-    }
 }

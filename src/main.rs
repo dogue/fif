@@ -12,9 +12,10 @@ fn main() {
         "hello"           // strings get pushed as well
         " world" swap +   // you can concatenate strings with addition
         print
-        debug
+        var x 5
+        x
         "#,
     );
-    // println!("{vm:?}");
+    println!("{vm:#?}");
     // FifVM { stack: [Float(0.5555556), Str("hello world")] }
 }

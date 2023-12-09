@@ -13,6 +13,21 @@ pub enum Type {
     Nil,
 }
 
+#[derive(Debug, PartialEq, Clone)]
+pub struct Variable {
+    pub value: Type,
+    pub ident: String,
+}
+
+impl Variable {
+    pub fn new(ident: &str, value: Type) -> Self {
+        Self {
+            ident: ident.to_string(),
+            value,
+        }
+    }
+}
+
 #[derive(Debug, PartialEq, Eq)]
 pub enum ParseTypeError {
     ParseIntError(ParseIntError),
