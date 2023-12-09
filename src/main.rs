@@ -9,9 +9,10 @@ fn main() {
         dupe              // duplicate the 3 on the top of the stack
         *                 // multiply the 3's together, now 9 is on top of the stack
         5.0 /             // if you mix floats and ints, the result will be a float
-        "hello"         // strings get pushed as well
+        "hello"           // strings get pushed as well
         " world" swap +   // you can concatenate strings with addition
         "#,
     );
     println!("{vm:?}");
+    // FifVM { stack: [Float(0.5555556), Str("hello world")] }
 }
