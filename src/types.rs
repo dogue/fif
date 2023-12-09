@@ -1,4 +1,5 @@
 use std::{
+    num::{ParseFloatError, ParseIntError},
     ops::{Add, Div, Mul, Sub},
     str::FromStr,
 };
@@ -8,28 +9,40 @@ pub enum Type {
     Int(isize),
     Float(f32),
     Str(String),
+    Operator,
+    Keyword,
+    Ident,
     Invalid,
     #[default]
     Nil,
 }
 
 #[derive(Debug, PartialEq, Eq)]
-pub struct ParseTypeError(String);
+pub enum ParseTypeError {
+    ParseIntError(ParseIntError),
+    ParseFloatError(ParseFloatError),
+    MalformedNumber,
+}
+// pub struct ParseTypeError(String);
 
 impl FromStr for Type {
     type Err = ParseTypeError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        if s.contains('.') {
-            let float = s
-                .parse::<f32>()
-                .map_err(|e| ParseTypeError(e.to_string()))?;
-            Ok(Type::Float(float))
-        } else {
-            let int = s
-                .parse::<isize>()
-                .map_err(|e| ParseTypeError(e.to_string()))?;
-            Ok(Type::Int(int))
+        match s.matches('.').count() {
+            0 => {
+                let int = s
+                    .parse::<isize>()
+                    .map_err(|e| ParseTypeError::ParseIntError(e))?;
+                Ok(Type::Int(int))
+            }
+            1 => {
+                let float = s
+                    .parse::<f32>()
+                    .map_err(|e| ParseTypeError::ParseFloatError(e))?;
+                Ok(Type::Float(float))
+            }
+            _ => Err(ParseTypeError::MalformedNumber),
         }
     }
 }

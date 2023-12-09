@@ -1,3 +1,4 @@
+use crate::error::LexerError;
 use crate::types::Type;
 
 #[derive(Debug)]
@@ -26,45 +27,57 @@ impl Lexer {
         lexer
     }
 
-    pub fn next_token(&mut self) -> Token {
+    pub fn tokenize(&mut self) -> Result<Vec<Token>, LexerError> {
+        let mut tokens = Vec::new();
+        loop {
+            let token = self.next_token()?;
+            tokens.push(token.clone());
+            if token.token_type == TokenType::Eof {
+                break;
+            }
+        }
+        Ok(tokens)
+    }
+
+    pub fn next_token(&mut self) -> Result<Token, LexerError> {
         self.skip_whitespace();
 
         let token = match self.ch {
             b'a'..=b'z' | b'A'..=b'Z' | b'_' => {
-                let ident = self.read_ident();
+                let ident = self.read_ident()?;
                 match ident.as_str() {
-                    "swap" => return Token::Operator(Operator::Swap),
-                    "dupe" => return Token::Operator(Operator::Dupe),
-                    _ => return Token::Ident(ident),
+                    "swap" => return Ok(Token::new(&ident, TokenType::Keyword)),
+                    "dupe" => return Ok(Token::new(&ident, TokenType::Keyword)),
+                    _ => return Ok(Token::new(&ident, TokenType::Ident)),
                 }
             }
             b'0'..=b'9' => {
-                let num = self.read_number();
-                return Token::Number(num);
+                let num = self.read_number()?;
+                return Ok(Token::new(&num, TokenType::Number));
             }
             b'"' => {
                 self.read(); // consume first double quote
-                let str = self.read_str();
-                Token::Str(str)
+                let string = self.read_str()?;
+                return Ok(Token::new(&string, TokenType::String));
             }
-            b'+' => Token::Operator(Operator::Add),
-            b'-' => Token::Operator(Operator::Sub),
-            b'*' => Token::Operator(Operator::Mul),
+            b'+' => Token::new("+", TokenType::Add),
+            b'-' => Token::new("-", TokenType::Sub),
+            b'*' => Token::new("*", TokenType::Mul),
             b'/' => {
                 if self.peek() == b'/' {
-                    let comment = self.read_comment();
-                    Token::Comment(comment)
+                    let comment = self.read_comment()?;
+                    Token::new(&comment, TokenType::Comment)
                 } else {
-                    Token::Operator(Operator::Div)
+                    Token::new("/", TokenType::Div)
                 }
             }
-            0 => Token::Eof,
-            _ => Token::Invalid,
+            0 => Token::new("\0", TokenType::Eof),
+            _ => Token::new(&self.ch.to_string(), TokenType::Invalid),
         };
 
         self.read();
 
-        token
+        Ok(token)
     }
 
     fn read(&mut self) {
@@ -78,41 +91,50 @@ impl Lexer {
         self.peek += 1;
     }
 
-    fn read_ident(&mut self) -> String {
+    fn read_ident(&mut self) -> Result<String, LexerError> {
         let start = self.cursor;
         while self.ch.is_ascii_alphabetic() || self.ch == b'_' {
             self.read();
         }
 
-        // this is peak rust type nonsense :)
-        String::from_utf8_lossy(&self.input[start..self.cursor]).to_string()
+        let ident = self.input[start..self.cursor].to_vec();
+        String::from_utf8(ident).map_err(|e| LexerError::ReadIdentError(e.to_string()))
     }
 
-    fn read_number(&mut self) -> String {
+    fn read_number(&mut self) -> Result<String, LexerError> {
         let start = self.cursor;
         while self.ch.is_ascii_digit() || self.ch == b'.' {
             self.read();
         }
 
-        String::from_utf8_lossy(&self.input[start..self.cursor]).to_string()
+        if !self.input[self.cursor].is_ascii_whitespace() {
+            return Err(LexerError::ReadNumberError(
+                "identifiers cannot start with a number".to_string(),
+            ));
+        }
+
+        let number = self.input[start..self.cursor].to_vec();
+        String::from_utf8(number).map_err(|e| LexerError::ReadNumberError(e.to_string()))
     }
 
-    fn read_str(&mut self) -> String {
+    fn read_str(&mut self) -> Result<String, LexerError> {
         let start = self.cursor;
         while self.ch != b'"' {
             self.read();
         }
 
-        String::from_utf8_lossy(&self.input[start..self.cursor]).to_string()
+        let string = self.input[start..self.cursor].to_vec();
+        String::from_utf8(string).map_err(|e| LexerError::ReadStringError(e.to_string()))
     }
 
-    fn read_comment(&mut self) -> String {
+    fn read_comment(&mut self) -> Result<String, LexerError> {
         let start = self.cursor;
         while self.ch != b'\n' {
             self.read();
         }
 
-        String::from_utf8_lossy(&self.input[start..self.cursor]).to_string()
+        let comment = self.input[start..self.cursor].to_vec();
+        String::from_utf8(comment).map_err(|e| LexerError::ReadCommentError(e.to_string()))
     }
 
     fn peek(&self) -> u8 {
@@ -130,33 +152,36 @@ impl Lexer {
     }
 
     pub fn parse_number(s: &str) -> Type {
-        if s.contains('.') {
-            let num = s.parse::<f32>().unwrap_or_default();
-            Type::Float(num)
-        } else {
-            let num = s.parse::<isize>().unwrap_or_default();
-            Type::Int(num)
+        s.parse().unwrap()
+    }
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct Token {
+    pub literal: String,
+    pub token_type: TokenType,
+}
+
+impl Token {
+    pub fn new(literal: &str, token_type: TokenType) -> Self {
+        Self {
+            literal: literal.to_string(),
+            token_type,
         }
     }
 }
 
-#[derive(Debug, PartialEq)]
-pub enum Token {
-    Number(String),
-    Str(String),
-    Ident(String),
-    Operator(Operator),
-    Comment(String),
-    Invalid,
-    Eof,
-}
-
-#[derive(Debug, PartialEq)]
-pub enum Operator {
+#[derive(Debug, PartialEq, Clone)]
+pub enum TokenType {
+    Number,
+    String,
+    Ident,
+    Keyword,
     Add,
     Sub,
     Mul,
     Div,
-    Swap,
-    Dupe,
+    Comment,
+    Invalid,
+    Eof,
 }

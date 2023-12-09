@@ -1,6 +1,7 @@
-use lexer::{Lexer, Operator, Token};
+use lexer::{Lexer, TokenType};
 use types::Type;
 
+pub mod error;
 pub mod lexer;
 pub mod types;
 
@@ -16,31 +17,31 @@ impl FifVM {
 
     pub fn run(&mut self, input: &str) {
         let mut lexer = Lexer::new(input);
+        let tokens = lexer.tokenize().unwrap();
 
-        loop {
-            match lexer.next_token() {
-                Token::Number(n) => {
-                    let num = Lexer::parse_number(&n);
-                    self.push(num);
-                }
-                Token::Str(s) => {
-                    let str = Type::Str(s);
-                    self.push(str);
-                }
-                Token::Operator(o) => match o {
-                    Operator::Add => self.add(),
-                    Operator::Sub => self.sub(),
-                    Operator::Mul => self.mul(),
-                    Operator::Div => self.div(),
-                    Operator::Swap => self.swap(),
-                    Operator::Dupe => self.dupe(),
-                },
-                Token::Eof => break,
-                Token::Ident(_) => {}
-                Token::Comment(_) => {}
-                Token::Invalid => {}
+        tokens.iter().for_each(|token| match token.token_type {
+            TokenType::Number => {
+                let num = Lexer::parse_number(&token.literal);
+                self.push(num);
             }
-        }
+            TokenType::String => {
+                let str = Type::Str(token.literal.clone());
+                self.push(str);
+            }
+            TokenType::Add => self.add(),
+            TokenType::Sub => self.sub(),
+            TokenType::Mul => self.mul(),
+            TokenType::Div => self.div(),
+            TokenType::Eof => {}
+            TokenType::Ident => {}
+            TokenType::Comment => {}
+            TokenType::Invalid => {}
+            TokenType::Keyword => match token.literal.as_str() {
+                "swap" => self.swap(),
+                "dupe" => self.dupe(),
+                _ => {}
+            },
+        });
     }
 
     fn pop(&mut self) -> Type {
